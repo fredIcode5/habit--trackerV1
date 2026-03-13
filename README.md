@@ -10,7 +10,7 @@
 
 image du prototype : 
 
-![ image du prototype actuel ](Img/prototype1.png)
+![ image du prototype actuel ](prototype1.png)
 
 ## 📁 Structure du projet
 
