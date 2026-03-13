@@ -4,7 +4,7 @@
 
 
 # habit-tracker
-# 🔥 DailyFlame ( nom provisoire
+# 🔥 DailyFlame ( nom provisoire )
 
 > Tracker d'habitudes gamifié avec système de flammes, streaks et XP.
 
