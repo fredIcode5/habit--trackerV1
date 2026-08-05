@@ -1,0 +1,21 @@
+.stats-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 60px);
+  padding: 20px;
+}
+
+.stats-container {
+  text-align: center;
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.stats-placeholder {
+  color: #666;
+  font-size: 1.1rem;
+  margin-top: 20px;
+}

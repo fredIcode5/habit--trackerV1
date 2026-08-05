@@ -1,5 +1,12 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import "./App.css";
+import Connexion from "./Connexion";
+import Inscription from "./Inscription";
+import Home from "./Home";
+import Stats from "./Stats";
+import Settings from "./Settings";
+import { onAuthStateChanged, signOut, User as FirebaseUser } from "firebase/auth";
+import { auth } from "./firebase";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES & INTERFACES
@@ -553,18 +560,57 @@ function MiniChart({ completions }: MiniChartProps) {
 // COMPOSANT : HEADER
 // ─────────────────────────────────────────────────────────────────────────────
 
-function AppHeader() {
+type AppView = "home" | "app" | "stats" | "settings" | "login" | "register";
+
+interface AppHeaderProps {
+  currentView: AppView;
+  onNavigate: (view: AppView) => void;
+  firebaseUser: FirebaseUser | null;
+}
+
+function AppHeader({ currentView, onNavigate, firebaseUser }: AppHeaderProps) {
+  const handleLogout = async () => {
+    await signOut(auth);
+    onNavigate("home");
+  };
+
+  const navItems: { id: AppView; label: string }[] = [
+    { id: "app", label: "Dashboard" },
+    { id: "stats", label: "Stats" },
+    { id: "settings", label: "Settings" }
+  ];
+
   return (
     <header className="header">
-      <button className="header__logo">🔥 DailyFlame</button>
+      <button className="header__logo" onClick={() => onNavigate("home")}>🔥 DailyFlame</button>
       <nav className="header__nav">
-        {["Social", "Stats", "Settings"].map((l) => (
-          <button key={l} className="header__nav-btn">{l}</button>
+        {navItems.map((item) => (
+          <div key={item.id} className="header__nav-btn-wrapper">
+            <button
+              className={`header__nav-btn ${currentView === item.id ? "header__nav-btn--active" : ""}`}
+              onClick={() => onNavigate(item.id)}
+            >
+              {item.label}
+            </button>
+            {currentView === item.id && <div className="header__nav-indicator" />}
+          </div>
         ))}
       </nav>
       <div className="header__auth">
-        <button className="header__auth-btn">Inscription</button>
-        <button className="header__auth-btn header__auth-btn--outline">Connexion</button>
+        {firebaseUser ? (
+          <div className="header__user-info">
+            <div className="header__avatar">
+              {firebaseUser.displayName ? firebaseUser.displayName.charAt(0).toUpperCase() : '🔥'}
+            </div>
+            <span className="header__user-email">{firebaseUser.email}</span>
+            <button className="header__auth-btn header__auth-btn--logout" onClick={handleLogout}>Déconnexion</button>
+          </div>
+        ) : (
+          <>
+            <button className="header__auth-btn" onClick={() => onNavigate("register")}>Inscription</button>
+            <button className="header__auth-btn header__auth-btn--outline" onClick={() => onNavigate("login")}>Connexion</button>
+          </>
+        )}
       </div>
     </header>
   );
@@ -1021,10 +1067,23 @@ function XPToast({ xp, visible }: XPToastProps) {
 
 export default function App() {
   const { store, addHabit, deleteHabit, toggleValidation, xpInfo } = useStore();
+  const [currentView, setCurrentView]   = useState<AppView>("app");
   const [modalOpen, setModalOpen]       = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<string>(todayISO());
   const [toast, setToast]               = useState<ToastState>({ visible: false, xp: 0 });
   const toastTimer                      = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+
+  // Écouter l'état d'authentification Firebase
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setFirebaseUser(user);
+      if (user && (currentView === "login" || currentView === "register")) {
+        setCurrentView("app");
+      }
+    });
+    return () => unsubscribe();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleToggle(habitId: string): void {
     const wasValidated: boolean = store.completions.some((c) => c.habitId === habitId && c.date === selectedDate);
@@ -1045,42 +1104,51 @@ export default function App() {
 
   return (
     <div className="app">
-      <AppHeader />
-      <FlameLegend />
-      <Hero xpInfo={xpInfo} habits={store.habits} completions={store.completions} />
-      <Topbar
-        selectedDate={selectedDate}
-        onSelectDate={setSelectedDate}
-        onOpenModal={() => setModalOpen(true)}
-        completions={store.completions}
-      />
-
-      <div className="board">
-        <div className="board__sidebar">
-          <HabitList
-            habits={store.habits}
-            completions={store.completions}
+      <AppHeader currentView={currentView} onNavigate={setCurrentView} firebaseUser={firebaseUser} />
+      {currentView === "home" && <Home onNavigate={setCurrentView} firebaseUser={firebaseUser} />}
+      {currentView === "login" && <Connexion onNavigate={setCurrentView} />}
+      {currentView === "register" && <Inscription onNavigate={setCurrentView} />}
+      {currentView === "stats" && <Stats />}
+      {currentView === "settings" && <Settings />}
+      {currentView === "app" && (
+        <>
+          <FlameLegend />
+          <Hero xpInfo={xpInfo} habits={store.habits} completions={store.completions} />
+          <Topbar
             selectedDate={selectedDate}
-            onToggle={handleToggle}
+            onSelectDate={setSelectedDate}
+            onOpenModal={() => setModalOpen(true)}
+            completions={store.completions}
           />
-        </div>
-        <div className="board__columns">
-          <Column title="MATIN"      habits={habitsMatin} completions={store.completions} selectedDate={selectedDate} onToggle={handleToggle} />
-          <Column title="APRÈS-MIDI" habits={habitsAprem} completions={store.completions} selectedDate={selectedDate} onToggle={handleToggle} />
-          <Column title="SOIR"       habits={habitsSoir}  completions={store.completions} selectedDate={selectedDate} onToggle={handleToggle} />
-        </div>
-      </div>
 
-      <footer className="footer">© 2026 – DailyFlamefezefezfe</footer>
+          <div className="board">
+            <div className="board__sidebar">
+              <HabitList
+                habits={store.habits}
+                completions={store.completions}
+                selectedDate={selectedDate}
+                onToggle={handleToggle}
+              />
+            </div>
+            <div className="board__columns">
+              <Column title="MATIN"      habits={habitsMatin} completions={store.completions} selectedDate={selectedDate} onToggle={handleToggle} />
+              <Column title="APRÈS-MIDI" habits={habitsAprem} completions={store.completions} selectedDate={selectedDate} onToggle={handleToggle} />
+              <Column title="SOIR"       habits={habitsSoir}  completions={store.completions} selectedDate={selectedDate} onToggle={handleToggle} />
+            </div>
+          </div>
 
-      <Modal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        habits={store.habits}
-        onAdd={addHabit}
-        onDelete={deleteHabit}
-      />
-      <XPToast xp={toast.xp} visible={toast.visible} />
+          <footer className="footer">© 2026 – DailyFlamefezefezfe</footer>
+
+          <Modal
+            open={modalOpen}
+            onClose={() => setModalOpen(false)}
+            habits={store.habits}
+            onAdd={addHabit}
+            onDelete={deleteHabit}
+          />
+          <XPToast xp={toast.xp} visible={toast.visible} />
+        </>
+      )}
     </div>
   );
 }

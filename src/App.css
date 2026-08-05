@@ -39,6 +39,13 @@ body { margin: 0; font-family: 'DM Mono', monospace; }
 
 .header__nav { display: flex; gap: 8px; }
 
+.header__nav-btn-wrapper {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .header__nav-btn {
   background: transparent;
   color: white;
@@ -48,9 +55,24 @@ body { margin: 0; font-family: 'DM Mono', monospace; }
   font-size: 15px;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.2s;
+  transition: background 0.2s, color 0.2s;
 }
 .header__nav-btn:hover { background: rgba(206, 110, 20, 0.15); }
+
+.header__nav-btn--active {
+  color: #ff9040;
+  font-weight: 500;
+}
+
+.header__nav-indicator {
+  position: absolute;
+  bottom: -4px;
+  width: 6px;
+  height: 6px;
+  background-color: #ff9040;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(255, 144, 64, 0.6);
+}
 
 .header__auth { display: flex; gap: 8px; }
 
@@ -68,6 +90,55 @@ body { margin: 0; font-family: 'DM Mono', monospace; }
 .header__auth-btn--outline {
   border: 1px solid #ce6e14;
   color: #ce6e14;
+}
+
+/* ─── USER INFO (connecté) ──────────────────────────────────────────────────── */
+.header__user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ce6e14, #ff9040);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  border: 2px solid #ff9040;
+  box-shadow: 0 0 8px rgba(206, 110, 20, 0.4);
+}
+
+.header__user-email {
+  color: #ccc;
+  font-size: 13px;
+  font-family: 'DM Mono', monospace;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header__auth-btn--logout {
+  background: transparent;
+  color: #ff6b6b;
+  border: 1px solid #ff6b6b;
+  padding: 6px 14px;
+  border-radius: 25px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.header__auth-btn--logout:hover {
+  background: #ff6b6b;
+  color: #1a1a1a;
 }
 
 /* ─── LÉGENDE FLAMMES ────────────────────────────────────────────────────────── */
